@@ -1,0 +1,148 @@
+/* calculadora.x */
+
+struct operandos {
+    int a;
+    int b;
+};
+
+program CALC_PROG {
+    version CALC_VERS {
+        int SUMA(operandos) = 1;
+        int RESTA(operandos) = 2;
+        int MULTIPLICA(operandos) = 3;
+        float DIVIDE(operandos) = 4;
+    } = 1;
+} = 0x31234567;
+
+
+
+//Calculadora server
+#include "calculadora.h"
+#include <stdio.h>
+
+int *
+suma_1_svc(operandos *argp, struct svc_req *rqstp)
+{
+    static int result;
+    result = argp->a + argp->b;
+    printf("Se llamo a suma_1_svc: %d + %d = %d\n", argp->a, argp->b, result);
+    return &result;
+}
+
+int *
+resta_1_svc(operandos *argp, struct svc_req *rqstp)
+{
+    static int result;
+    result = argp->a - argp->b;
+    printf("Se llamo a resta_1_svc: %d - %d = %d\n", argp->a, argp->b, result);
+    return &result;
+}
+
+int *
+multiplica_1_svc(operandos *argp, struct svc_req *rqstp)
+{
+    static int result;
+    result = argp->a * argp->b;
+    printf("Se llamo a multiplica_1_svc: %d * %d = %d\n", argp->a, argp->b, result);
+    return &result;
+}
+
+float *
+divide_1_svc(operandos *argp, struct svc_req *rqstp)
+{
+    static float result;
+
+    if (argp->b == 0) {
+        printf("Error: division entre cero\n");
+        result = 0;
+    } else {
+        result = (float)argp->a / (float)argp->b;
+    }
+
+    printf("Se llamo a divide_1_svc: %d / %d = %f\n", argp->a, argp->b, result);
+    return &result;
+}
+
+
+//calculadora cliente
+#include "calculadora.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void calc_prog_1(char *host, char *operacion, int a, int b)
+{
+    CLIENT *clnt;
+    operandos ops;
+    int *res_int;
+    float *res_float;
+
+    clnt = clnt_create(host, CALC_PROG, CALC_VERS, "udp");
+    if (clnt == NULL) {
+        clnt_pcreateerror(host);
+        exit(1);
+    }
+
+    ops.a = a;
+    ops.b = b;
+
+    if (strcmp(operacion, "suma") == 0) {
+        res_int = suma_1(&ops, clnt);
+        if (res_int == NULL) {
+            clnt_perror(clnt, "call failed");
+            exit(1);
+        }
+        printf("Resultado: %d\n", *res_int);
+    }
+    else if (strcmp(operacion, "resta") == 0) {
+        res_int = resta_1(&ops, clnt);
+        if (res_int == NULL) {
+            clnt_perror(clnt, "call failed");
+            exit(1);
+        }
+        printf("Resultado: %d\n", *res_int);
+    }
+    else if (strcmp(operacion, "multiplica") == 0) {
+        res_int = multiplica_1(&ops, clnt);
+        if (res_int == NULL) {
+            clnt_perror(clnt, "call failed");
+            exit(1);
+        }
+        printf("Resultado: %d\n", *res_int);
+    }
+    else if (strcmp(operacion, "divide") == 0) {
+        res_float = divide_1(&ops, clnt);
+        if (res_float == NULL) {
+            clnt_perror(clnt, "call failed");
+            exit(1);
+        }
+        printf("Resultado: %f\n", *res_float);
+    }
+    else {
+        printf("Operacion no valida. Use: suma, resta, multiplica o divide\n");
+    }
+
+    clnt_destroy(clnt);
+}
+
+int main(int argc, char *argv[])
+{
+    char *host;
+    char *operacion;
+    int a, b;
+
+    if (argc != 5) {
+        printf("Uso: %s servidor operacion num1 num2\n", argv[0]);
+        printf("Ejemplo: %s localhost suma 8 3\n", argv[0]);
+        exit(1);
+    }
+
+    host = argv[1];
+    operacion = argv[2];
+    a = atoi(argv[3]);
+    b = atoi(argv[4]);
+
+    calc_prog_1(host, operacion, a, b);
+
+    return 0;
+}
