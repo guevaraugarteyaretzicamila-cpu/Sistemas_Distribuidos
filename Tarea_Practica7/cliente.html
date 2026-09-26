@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cliente Web de Arlet</title>
+</head>
+<body style="font-family: sans-serif; text-align: center; padding-top: 50px;">
+
+    <h1>Mi Cliente Web Distribuido</h1>
+    
+    <input type="text" id="nombreInput" placeholder="Escribe tu nombre aquí">
+    
+    <button onclick="llamarAPI()">Saludar al Servidor</button>
+    
+    <h2 id="respuesta" style="color: #d11277;"></h2>
+
+    <script>
+        function llamarAPI() {
+            // Buscamos el cuadro de texto por su ID y sacamos lo que el usuario escribió (.value)
+            const nombreEscrito = document.getElementById('nombreInput').value;
+            
+            // Si el usuario no escribió nada, le asignamos el nombre "Mundo" por defecto
+            const nombreFinal = nombreEscrito || "Mundo";
+
+            // El navegador sale a la red y toca la puerta de tu servidor Flask en el puerto 5000.
+            // Le pasamos el nombre en la URL: ?nombre=Arlet
+            fetch(`http://localhost:5000/hola?nombre=${nombreFinal}`)
+            
+                // el servidor responde con un paquete y esta línea lo abre
+                // para que podamos leer el formato JSON[cite: 55].
+                .then(res => res.json())
+                
+                // llama a data y saca el mnj
+                .then(data => {
+                    // busca el espacio vacío (h2) y le metemos el texto que llegó del servidor[cite: 90].
+                    document.getElementById('respuesta').innerText = data.mensaje;
+                })
+                
+                // avisa si el servidor está apagado o algo sale mal
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("¡Ups! Parece que el servidor Flask está apagado.");
+                });
+        }
+    </script>
+</body>
+</html>
