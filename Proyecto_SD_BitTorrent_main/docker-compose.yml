@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  tracker:
+    build: .
+    container_name: sd_tracker
+    command: python Trackers/tracker.py
+    tty: true
+    networks:
+      - bittorrent_net
+
+  peer_a:
+    build: .
+    container_name: sd_peer_a
+    command: python Peers/peer.py
+    stdin_open: true
+    tty: true
+    environment:
+      - PEER_ID=NodoA
+      - PEER_PORT=8001
+      - PEER_ADVERTISED_IP=peer_a
+      - TRACKER_IP=tracker
+      - TRACKER_PORT=8080
+    volumes:
+      - ./Peers/sample_files:/app/sample_files
+      - ./Peers/downloads_A:/app/received_files
+    depends_on:
+      - tracker
+    networks:
+      - bittorrent_net
+
+  peer_b:
+    build: .
+    container_name: sd_peer_b
+    command: python Peers/peer.py
+    stdin_open: true
+    tty: true
+    environment:
+      - PEER_ID=NodoB
+      - PEER_PORT=8002
+      - PEER_ADVERTISED_IP=peer_b
+      - TRACKER_IP=tracker
+      - TRACKER_PORT=8080
+    volumes:
+      - ./Peers/downloads_B:/app/received_files
+    depends_on:
+      - tracker
+    networks:
+      - bittorrent_net
+
+  peer_c:
+    build: .
+    container_name: sd_peer_c
+    command: python Peers/peer.py
+    stdin_open: true
+    tty: true
+    environment:
+      - PEER_ID=NodoC
+      - PEER_PORT=8003
+      - PEER_ADVERTISED_IP=peer_c
+      - TRACKER_IP=tracker
+      - TRACKER_PORT=8080
+    volumes:
+      - ./Peers/downloads_C:/app/received_files
+    depends_on:
+      - tracker
+    networks:
+      - bittorrent_net
+
+networks:
+  bittorrent_net:
+    driver: bridge
