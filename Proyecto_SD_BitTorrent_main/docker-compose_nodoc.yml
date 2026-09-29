@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  tracker:
+    build: .
+    container_name: sd_tracker
+    command: python Trackers/tracker.py
+    tty: true
+    networks:
+      - bittorrent_net
+
+  peer_c:
+    build: .
+    container_name: sd_peer_c
+    command: python Peers/peer.py
+    stdin_open: true
+    tty: true
+    environment:
+      - PEER_ID=NodoC
+      - PEER_PORT=8003
+      - PEER_ADVERTISED_IP=100.91.250.27
+      - TRACKER_IP=100.76.248.121
+      - TRACKER_PORT=8080
+    ports:
+      - "8003:8003"
+    volumes:
+      - ./Peers/downloads_C:/app/received_files
+    depends_on:
+      - tracker
+    networks:
+      - bittorrent_net
+
+networks:
+  bittorrent_net:
+    driver: bridge

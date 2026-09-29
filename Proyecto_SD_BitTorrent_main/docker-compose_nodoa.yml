@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  peer_a:
+    build: .
+    container_name: sd_peer_a
+    command: python Peers/peer.py
+    stdin_open: true
+    tty: true
+    environment:
+      - PEER_ID=NodoA
+      - PEER_PORT=8001
+      - PEER_ADVERTISED_IP=100.126.160.79  # La IP de Tailscale de Mariana
+      - TRACKER_IP=100.76.248.121         # TU IP de Tailscale (donde corre tu tracker)
+      - TRACKER_PORT=8080
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./Peers/sample_files:/app/sample_files
+      - ./Peers/downloads_A:/app/received_files
+    networks:
+      - bittorrent_net
+
+networks:
+  bittorrent_net:
+    driver: bridge

@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  tracker:
+    build: .
+    container_name: sd_tracker
+    command: python Trackers/tracker.py
+    tty: true
+    ports:
+      - "8080:8080"
+    networks:
+      - bittorrent_net
+
+  peer_b:
+    build: .
+    container_name: sd_peer_b
+    command: python Peers/peer.py
+    stdin_open: true
+    tty: true
+    environment:
+      - PEER_ID=NodoB
+      - PEER_PORT=8002
+      - PEER_ADVERTISED_IP=100.76.248.121  # Tu IP de Tailscale
+      - TRACKER_IP=tracker                  # Se conecta al tracker local dentro de Docker
+      - TRACKER_PORT=8080
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./Peers/sample_files:/app/sample_files
+      - ./Peers/downloads_B:/app/received_files
+    depends_on:
+      - tracker
+    networks:
+      - bittorrent_net
+
+networks:
+  bittorrent_net:
+    driver: bridge
